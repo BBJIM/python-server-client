@@ -18,12 +18,11 @@ def md5Inc(string):
 
 def login(username, password):
     dirname = os.path.dirname(__file__)
+    incPassword = md5Inc(password)
     for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
         # Split on the space, and store the results in a list of two strings
         login_info = line.split()
-        print(username == login_info[0])
-        print(password == login_info[1])
-        if username == login_info[0] and password == login_info[1]:
+        if username == login_info[0] and incPassword == login_info[1]:
             return True
     return False
 
@@ -31,7 +30,7 @@ def login(username, password):
 def connect(args=None):
     argsArray = args.split(",")
     username = argsArray[0]
-    password = md5Inc(argsArray[1])
+    password = argsArray[1]
     if login(username, password):
         return pickle.dumps((True, "You are now logged in..."))
     else:
@@ -43,10 +42,11 @@ def register(args=None):
     file = open("{}/accountfile.txt".format(dirname), "a")
     argsArray = args.split(",")
     username = argsArray[0]
-    password = md5Inc(argsArray[1])
+    password = argsArray[1]
+    incPassword = md5Inc(argsArray[1])
     file.write(username)
     file.write(" ")
-    file.write(password)
+    file.write(incPassword)
     file.write("\n")
     file.close()
     if login(username, password):
