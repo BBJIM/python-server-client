@@ -1,8 +1,8 @@
-import md5
-import socket
-import threading
+import hashlib
 import os
 import pickle
+import socket
+import threading
 
 # TODO: add check if already registered
 # TODO: add show all available actions
@@ -10,11 +10,19 @@ import pickle
 # TODO: add comments
 
 
+def md5Inc(string):
+    m = hashlib.md5()
+    m.update(string)
+    return m.digest()
+
+
 def login(username, password):
     dirname = os.path.dirname(__file__)
     for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
         # Split on the space, and store the results in a list of two strings
         login_info = line.split()
+        print(username == login_info[0])
+        print(password == login_info[1])
         if username == login_info[0] and password == login_info[1]:
             return True
     return False
@@ -23,7 +31,7 @@ def login(username, password):
 def connect(args=None):
     argsArray = args.split(",")
     username = argsArray[0]
-    password = md5.new(argsArray[1]).digest()
+    password = md5Inc(argsArray[1])
     if login(username, password):
         return pickle.dumps((True, "You are now logged in..."))
     else:
@@ -35,7 +43,7 @@ def register(args=None):
     file = open("{}/accountfile.txt".format(dirname), "a")
     argsArray = args.split(",")
     username = argsArray[0]
-    password = md5.new(argsArray[1]).digest()
+    password = md5Inc(argsArray[1])
     file.write(username)
     file.write(" ")
     file.write(password)
@@ -81,7 +89,7 @@ class ClientThread(threading.Thread):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.clientAddress = clientAddress
-        print ("New connection added: ", clientAddress)
+        print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
 
     def run(self):
@@ -91,8 +99,8 @@ class ClientThread(threading.Thread):
             dataArray = data.split(";")
             if len(dataArray) > 0:
                 action = dataArray[0].upper()
+                global serverActions
                 if action in serverActions:
-                    global serverActions
                     # might not need this check
                     if len(dataArray) > 1:
                         args = dataArray[1]
