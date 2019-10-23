@@ -12,7 +12,7 @@ def main():
     in_data = client.recv(1024)
     print("From Server: {}".format(in_data))
     while not isLoggedIn:
-        out_data = raw_input()
+        out_data = raw_input(">>>")
         client.sendall(out_data)
         in_data = client.recv(1024)
         loginTupleResponse = pickle.loads(in_data)
@@ -24,7 +24,7 @@ def main():
     print("Enter the command you want to activate")
 
     while isLoggedIn:
-        out_data = raw_input()
+        out_data = raw_input(">>>")
         client.sendall(out_data)
         in_data = client.recv(1024)
         print("From Server: {}".format(in_data))
