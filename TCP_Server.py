@@ -95,7 +95,7 @@ def time(client,args=None):
 
 
 def name(client,args=None):
-    return "Your name: {}".format(client.name)
+    return client.name
 
 
 def exitFromServer(client,args=None):
@@ -109,13 +109,15 @@ def printScreen(client,args=None):
     im = ImageGrab.grab()
     im.save("{}.png".format(client.name))
     with open("{}.png".format(client.name), "rb") as image:
-        f = image.read()
-        b = bytearray(f)
+        byte = image.read(16384)
+        while len(byte) >= 16384:
+            client.csocket.send(byte)
+            byte = image.read(16384)
+        client.csocket.send(byte)
         im.close()
         image.close()
         os.remove("{}.png".format(client.name))
-        
-        return b
+        return "PRINT_IMAGE"
 
 
 def activateProgram(client,args=None):

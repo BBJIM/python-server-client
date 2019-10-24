@@ -1,6 +1,7 @@
 import socket
 import pickle
 import sys
+import os
 
 # TODO: add try catch 
 
@@ -41,17 +42,26 @@ def main():
                 print("From Client: You are already logged in")
             else:
                 client.sendall(out_data)
-                in_data = client.recv(4096)
-                if check_command!="print_screen":
+                if check_command != "print_screen":
+                    in_data = client.recv(4096)
                     print("From Server: {}".format(in_data))
+                    if in_data.lower()=="bye bye":
+                        sys.exit()
                 else:
-                    img = open("a.png","wb")
-                    img.write(in_data)
-                    img.close()
+                    bytesArray = []
+                    in_data = client.recv(16384)
+                    while in_data!="PRINT_IMAGE":
+                        bytesArray.append(in_data)
+                        in_data = client.recv(16384)
+                    data = b"{}".format("".join(bytesArray))
+                    dirname = os.path.dirname(__file__)
                     print("From Server: {}".format(in_data))
-                if in_data.lower()=="bye bye":
-                    sys.exit()
-
+                    client.sendall("NAME")
+                    name = client.recv(1024)
+                    with open("{}/{}.png".format(dirname,name), 'ab') as img:
+                        img.write(data)
+                        img.close()
+                   
 
 if __name__ == "__main__":
     main()
