@@ -3,6 +3,7 @@ import os
 import pickle
 import socket
 import threading
+import datetime
 
 # TODO: add show all available actions
 # TODO: add try catch to all actions
@@ -32,13 +33,13 @@ def checkIfRegistered(username):
 
 def login(username, password):
     dirname = os.path.dirname(__file__)
-    incPassword = md5Encryption(password)
+    encPassword = md5Encryption(password)
     try:
         mutex.acquire()
         for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
             # Split on the space, and store the results in a list of two strings
             login_info = line.split()
-            if username == login_info[0] and incPassword == login_info[1]:
+            if username == login_info[0] and encPassword == login_info[1]:
                 return True
         return False
     except:
@@ -46,24 +47,24 @@ def login(username, password):
     finally:
         mutex.release()
     
-
-
-def connect(args=None):
+    
+def connect(client,args=None):
     argsArray = args.split(",")
     username = argsArray[0]
     password = argsArray[1]
     if login(username, password):
+        client.name = username
         return pickle.dumps((True, "You are now logged in..."))
     else:
         return pickle.dumps((False, "username and/or password are incorrect"))
 
 
-def register(args=None):
+def register(client,args=None):
     dirname = os.path.dirname(__file__)
     argsArray = args.split(",")
     username = argsArray[0]
     password = argsArray[1]
-    incPassword = md5Encryption(argsArray[1])
+    encPassword = md5Encryption(argsArray[1])
     if checkIfRegistered(username):
         return pickle.dumps((False, "There is already a user with that name"))
     else:
@@ -72,7 +73,7 @@ def register(args=None):
             file = open("{}/accountfile.txt".format(dirname), "a")
             file.write(username)
             file.write(" ")
-            file.write(incPassword)
+            file.write(encPassword)
             file.write("\n")
             file.close()
         except:
@@ -80,35 +81,37 @@ def register(args=None):
         finally:
             mutex.release()
         if login(username, password):
+            client.name = username
             return pickle.dumps((True, "You are now logged in..."))
         else:
             return pickle.dumps((False, "error creating user"))
 
 
-def time(args=None):
-    return "TIME"
+def time(client,args=None):
+    tm = datetime.datetime.now()
+    return "The current time is {}".format(tm)
 
 
-def name(args=None):
-    return "NAME"
+def name(client,args=None):
+    return "Your name: {client.name}"
 
 
-def exitFromServer(args=None):
+def exitFromServer(client,args=None):
     return "EXIT"
 
 
-def printScreen(args=None):
+def printScreen(client,args=None):
     return "PRINT_SCREEN"
 
 
-def activateProgram(args=None):
+def activateProgram(client,args=None):
     return "ACTIVATE_PROGRAM"
 
 
-def showFolder(args=None):
+def showFolder(client,args=None):
     return "SHOW_FOLDER"
 
-def showActions(args=None):
+def showActions(client,args=None):
     lst = list(serverActions.keys())
     str1 = "\n"
     return str1.join(filter(lambda lstItem: lstItem!="CONNECT" and lstItem!="REGISTER",lst))
@@ -124,6 +127,7 @@ class ClientThread(threading.Thread):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.clientAddress = clientAddress
+        self.name=""
         print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
 
@@ -139,9 +143,9 @@ class ClientThread(threading.Thread):
                     # might not need this check
                     if len(dataArray) > 1:
                         args = dataArray[1]
-                        result = serverActions[action](args)
+                        result = serverActions[action](self,args)
                     else:
-                        result = serverActions[action]()
+                        result = serverActions[action](self)
                     self.csocket.send(result)
                 else:
                     self.csocket.send("no such action")
