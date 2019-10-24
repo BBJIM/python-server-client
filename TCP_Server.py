@@ -125,7 +125,11 @@ def activateProgram(client,args=None):
 
 
 def showFolder(client,args=None):
-    return "SHOW_FOLDER"
+    path = "."
+    if args != None:
+        path=args
+    for root, dirs, files in os.walk(path):
+        return ", ".join(dirs+files)
 
 def showActions(client,args=None):
     lst = list(serverActions.keys())
