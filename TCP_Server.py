@@ -4,27 +4,48 @@ import pickle
 import socket
 import threading
 
-# TODO: add check if already registered
 # TODO: add show all available actions
 # TODO: add try catch to all actions
 # TODO: add comments
 
+mutex = threading.Lock()
 
-def md5Inc(string):
+def md5Encryption(string):
     m = hashlib.md5()
     m.update(string)
-    return m.digest()
+    return m.hexdigest()
 
+def checkIfRegistered(username):
+    dirname = os.path.dirname(__file__)
+    try:
+        mutex.acquire()
+        for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
+            # Split on the space, and store the results in a list of two strings
+            login_info = line.split()
+            if username == login_info[0]:
+                return True
+        return False
+    except:
+            print ("Error")
+    finally:
+        mutex.release()
 
 def login(username, password):
     dirname = os.path.dirname(__file__)
-    incPassword = md5Inc(password)
-    for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
-        # Split on the space, and store the results in a list of two strings
-        login_info = line.split()
-        if username == login_info[0] and incPassword == login_info[1]:
-            return True
-    return False
+    incPassword = md5Encryption(password)
+    try:
+        mutex.acquire()
+        for line in open("{}/accountfile.txt".format(dirname), "r").readlines():  # Read the lines
+            # Split on the space, and store the results in a list of two strings
+            login_info = line.split()
+            if username == login_info[0] and incPassword == login_info[1]:
+                return True
+        return False
+    except:
+            print ("Error")
+    finally:
+        mutex.release()
+    
 
 
 def connect(args=None):
@@ -39,20 +60,29 @@ def connect(args=None):
 
 def register(args=None):
     dirname = os.path.dirname(__file__)
-    file = open("{}/accountfile.txt".format(dirname), "a")
     argsArray = args.split(",")
     username = argsArray[0]
     password = argsArray[1]
-    incPassword = md5Inc(argsArray[1])
-    file.write(username)
-    file.write(" ")
-    file.write(incPassword)
-    file.write("\n")
-    file.close()
-    if login(username, password):
-        return pickle.dumps((True, "You are now logged in..."))
+    incPassword = md5Encryption(argsArray[1])
+    if checkIfRegistered(username):
+        return pickle.dumps((False, "There is already a user with that name"))
     else:
-        return pickle.dumps((False, "error creating user"))
+        try:
+            mutex.acquire()
+            file = open("{}/accountfile.txt".format(dirname), "a")
+            file.write(username)
+            file.write(" ")
+            file.write(incPassword)
+            file.write("\n")
+            file.close()
+        except:
+            print ("Error")
+        finally:
+            mutex.release()
+        if login(username, password):
+            return pickle.dumps((True, "You are now logged in..."))
+        else:
+            return pickle.dumps((False, "error creating user"))
 
 
 def time(args=None):
@@ -78,10 +108,15 @@ def activateProgram(args=None):
 def showFolder(args=None):
     return "SHOW_FOLDER"
 
+def showActions(args=None):
+    lst = list(serverActions.keys())
+    str1 = "\n"
+    return str1.join(filter(lambda lstItem: lstItem!="CONNECT" and lstItem!="REGISTER",lst))
 
-serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time, "NAME": name,
-                 "EXIT": exitFromServer, "PRINT_SCREEN": printScreen,
-                 "ACTIVATE_PROGRAM": activateProgram, "SHOW_FOLDER": showFolder}
+serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time, 
+                 "NAME": name, "EXIT": exitFromServer, 
+                 "PRINT_SCREEN": printScreen,"ACTIVATE_PROGRAM": activateProgram, 
+                 "SHOW_FOLDER": showFolder, "SHOW_ACTIONS":showActions}
 
 
 class ClientThread(threading.Thread):
