@@ -4,9 +4,10 @@ import pickle
 import socket
 import threading
 import datetime
+import subprocess
 from PIL import ImageGrab
 
-# TODO: add show all available actions
+# TODO: add show all available actions+params
 # TODO: add try catch to all actions
 # TODO: add comments
 # TODO: from PIL import ImageGrab
@@ -106,22 +107,29 @@ def exitFromServer(client,args=None):
 
 
 def printScreen(client,args=None):
-    im = ImageGrab.grab()
-    im.save("{}.png".format(client.name))
-    with open("{}.png".format(client.name), "rb") as image:
-        byte = image.read(16384)
-        while len(byte) >= 16384:
-            client.csocket.send(byte)
+    try:
+        im = ImageGrab.grab()
+        im.save("{}.png".format(client.name))
+        with open("{}.png".format(client.name), "rb") as image:
             byte = image.read(16384)
-        client.csocket.send(byte)
-        im.close()
-        image.close()
-        os.remove("{}.png".format(client.name))
-        return "PRINT_IMAGE"
+            while len(byte) >= 16384:
+                client.csocket.send(byte)
+                byte = image.read(16384)
+            client.csocket.send(byte)
+            im.close()
+            image.close()
+            os.remove("{}.png".format(client.name))
+            return "Image has be saved in the client dir"
+    except:
+            return "Image not saved"
 
 
 def activateProgram(client,args=None):
-    return "ACTIVATE_PROGRAM"
+    try:
+        subprocess.call(['C:\Users\Bar\AppData\Local\Postman\Postman.exe'])
+        return "program activated"
+    except:
+        return "program failed to be activated"
 
 
 def showFolder(client,args=None):
