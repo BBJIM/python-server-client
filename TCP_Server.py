@@ -47,7 +47,7 @@ def login(username, password):
     finally:
         mutex.release()
     
-    
+
 def connect(client,args=None):
     argsArray = args.split(",")
     username = argsArray[0]
@@ -97,7 +97,10 @@ def name(client,args=None):
 
 
 def exitFromServer(client,args=None):
-    return "EXIT"
+    client.csocket.send("Bye Bye")
+    client.csocket.shutdown(0)
+    client.csocket.close()
+    return "Bye Bye"
 
 
 def printScreen(client,args=None):
@@ -146,7 +149,11 @@ class ClientThread(threading.Thread):
                         result = serverActions[action](self,args)
                     else:
                         result = serverActions[action](self)
-                    self.csocket.send(result)
+                    if result.lower() != "bye bye":
+                        self.csocket.send(result)
+                    else:
+                        del self
+                        return
                 else:
                     self.csocket.send("no such action")
             else:
