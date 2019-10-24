@@ -4,10 +4,12 @@ import pickle
 import socket
 import threading
 import datetime
+from PIL import ImageGrab
 
 # TODO: add show all available actions
 # TODO: add try catch to all actions
 # TODO: add comments
+# TODO: from PIL import ImageGrab
 
 mutex = threading.Lock()
 
@@ -93,7 +95,7 @@ def time(client,args=None):
 
 
 def name(client,args=None):
-    return "Your name: {client.name}"
+    return "Your name: {}".format(client.name)
 
 
 def exitFromServer(client,args=None):
@@ -104,7 +106,16 @@ def exitFromServer(client,args=None):
 
 
 def printScreen(client,args=None):
-    return "PRINT_SCREEN"
+    im = ImageGrab.grab()
+    im.save("{}.png".format(client.name))
+    with open("{}.png".format(client.name), "rb") as image:
+        f = image.read()
+        b = bytearray(f)
+        im.close()
+        image.close()
+        os.remove("{}.png".format(client.name))
+        
+        return b
 
 
 def activateProgram(client,args=None):

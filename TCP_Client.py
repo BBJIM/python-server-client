@@ -41,8 +41,14 @@ def main():
                 print("From Client: You are already logged in")
             else:
                 client.sendall(out_data)
-                in_data = client.recv(1024)
-                print("From Server: {}".format(in_data))
+                in_data = client.recv(4096)
+                if check_command!="print_screen":
+                    print("From Server: {}".format(in_data))
+                else:
+                    img = open("a.png","wb")
+                    img.write(in_data)
+                    img.close()
+                    print("From Server: {}".format(in_data))
                 if in_data.lower()=="bye bye":
                     sys.exit()
 
