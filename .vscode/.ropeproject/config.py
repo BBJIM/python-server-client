@@ -96,7 +96,7 @@ def set_prefs(prefs):
     # If `True`, rope will sort imports alphabetically by module name instead
     # of alphabetically by import statement, with from imports after normal
     # imports.
-    prefs['sort_imports_alphabetically'] = False
+    prefs['sort_imports_alphabetically'] = True
 
     # Location of implementation of
     # rope.base.oi.type_hinting.interfaces.ITypeHintingFactory In general

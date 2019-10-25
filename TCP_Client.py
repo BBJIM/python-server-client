@@ -1,9 +1,15 @@
-import socket
-import pickle
-import sys
 import os
+import pickle
+import socket
+import sys
+import threading
 
 # TODO: add try catch
+
+
+def connectionThread(SERVER, PORT):
+    timer = threading.Timer(10)
+    timer.start()
 
 
 def main():
@@ -13,6 +19,7 @@ def main():
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER, PORT))
+        threading._start_new_thread(connectionThread)
         isConnected = True
     except:
         print("\nCould not connect the server\n")
@@ -20,7 +27,7 @@ def main():
         isLoggedIn = False
         in_data = client.recv(1024)
         print("From Server: {}".format(in_data))
-        while not isLoggedIn:
+        while not isLoggedIn and isConnected:
             out_data = raw_input(">>>")
             check_command = out_data.split(";")[0].lower()
             if check_command == "register" or check_command == "connect":
@@ -37,7 +44,7 @@ def main():
 
         print("Enter the command you want to activate")
 
-        while isLoggedIn:
+        while isLoggedIn and isConnected:
             out_data = raw_input(">>>")
             check_command = out_data.split(";")[0].lower()
             if check_command == "register" or check_command == "connect":

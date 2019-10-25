@@ -1,16 +1,21 @@
+import datetime
 import hashlib
 import os
 import pickle
 import socket
-import threading
-import datetime
 import subprocess
-from PIL import ImageGrab
+import sys
+import threading
+
+try:
+    from PIL import ImageGrab
+except ImportError:
+    sys.exit("""You need Pillow! install it by runnig pip install 
+                Pillow in the directory where pip.exe is""")
 
 # TODO: add show all available actions+params
 # TODO: add try catch to all actions
 # TODO: add comments
-# TODO: from PIL import ImageGrab
 
 mutex = threading.Lock()
 
@@ -142,7 +147,8 @@ def showFolder(client, args=None):
     if args != None:
         path = args
     for root, dirs, files in os.walk(path):
-        return ", ".join(dirs+files)
+        root
+        return root + " =>\n" + ", ".join(dirs+files)
 
 
 def showActions(client, args=None):
@@ -156,6 +162,8 @@ serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time,
                  "PRINT_SCREEN": printScreen, "ACTIVATE_PROGRAM": activateProgram,
                  "SHOW_FOLDER": showFolder, "SHOW_ACTIONS": showActions}
 
+# def connectionThread():
+
 
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
@@ -163,6 +171,7 @@ class ClientThread(threading.Thread):
         self.csocket = clientsocket
         self.clientAddress = clientAddress
         self.name = ""
+        threading._start_new_thread(connectionThread)
         print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
 
