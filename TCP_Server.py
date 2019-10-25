@@ -14,10 +14,33 @@ from PIL import ImageGrab
 
 mutex = threading.Lock()
 
+
+def getFullFilePath(directory, fileName):
+    files = os.listdir(directory)
+    print(files)
+    for f in files:
+        try:
+            filePath = os.path.join(directory, f)
+            print(filePath)
+            # if f is a dir
+            if os.path.isdir(filePath):
+                return getFullFilePath(filePath, fileName)
+            # if f is a file
+            elif os.path.isfile(filePath):
+                if f == fileName:
+                    return filePath
+            else:
+                continue
+        except WindowsError:
+            continue
+    return None
+
+
 def md5Encryption(string):
     m = hashlib.md5()
     m.update(string)
     return m.hexdigest()
+
 
 def checkIfRegistered(username):
     dirname = os.path.dirname(__file__)
@@ -30,9 +53,10 @@ def checkIfRegistered(username):
                 return True
         return False
     except:
-            print ("Error")
+        print ("Error")
     finally:
         mutex.release()
+
 
 def login(username, password):
     dirname = os.path.dirname(__file__)
@@ -46,12 +70,13 @@ def login(username, password):
                 return True
         return False
     except:
-            print ("Error")
+        print("Error")
+        return False
     finally:
         mutex.release()
-    
 
-def connect(client,args=None):
+
+def connect(client, args=None):
     argsArray = args.split(",")
     username = argsArray[0]
     password = argsArray[1]
@@ -62,7 +87,7 @@ def connect(client,args=None):
         return pickle.dumps((False, "username and/or password are incorrect"))
 
 
-def register(client,args=None):
+def register(client, args=None):
     dirname = os.path.dirname(__file__)
     argsArray = args.split(",")
     username = argsArray[0]
@@ -80,7 +105,8 @@ def register(client,args=None):
             file.write("\n")
             file.close()
         except:
-            print ("Error")
+            print("Error")
+            return pickle.dumps((False, "error creating user"))
         finally:
             mutex.release()
         if login(username, password):
@@ -90,23 +116,23 @@ def register(client,args=None):
             return pickle.dumps((False, "error creating user"))
 
 
-def time(client,args=None):
+def time(client, args=None):
     tm = datetime.datetime.now()
     return "The current time is {}".format(tm)
 
 
-def name(client,args=None):
+def name(client, args=None):
     return client.name
 
 
-def exitFromServer(client,args=None):
+def exitFromServer(client, args=None):
     client.csocket.send("Bye Bye")
     client.csocket.shutdown(0)
     client.csocket.close()
     return "Bye Bye"
 
 
-def printScreen(client,args=None):
+def printScreen(client, args=None):
     try:
         im = ImageGrab.grab()
         im.save("{}.png".format(client.name))
@@ -121,33 +147,47 @@ def printScreen(client,args=None):
             os.remove("{}.png".format(client.name))
             return "Image has be saved in the client dir"
     except:
-            return "Image not saved"
+        return "Image not saved"
 
 
-def activateProgram(client,args=None):
-    try:
-        subprocess.call(['C:\Users\Bar\AppData\Local\Postman\Postman.exe'])
+def activateProgram(client, args=None):
+    # try:
+    if(args != None):
+        if(os.path.isfile(args)):
+            subprocess.call([args])
+        else:
+            dl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            drives = ['%s:' % d for d in dl if os.path.exists('%s:' % d)]
+            for drive in drives:
+                f = getFullFilePath(drive+"/", args)
+                if(f != None):
+                    subprocess.call([f])
+                    break
         return "program activated"
-    except:
-        return "program failed to be activated"
+        # except:
+        #     return "program failed to be activated"
+    else:
+        return "no args given"
 
 
-def showFolder(client,args=None):
+def showFolder(client, args=None):
     path = "."
     if args != None:
-        path=args
+        path = args
     for root, dirs, files in os.walk(path):
         return ", ".join(dirs+files)
 
-def showActions(client,args=None):
+
+def showActions(client, args=None):
     lst = list(serverActions.keys())
     str1 = "\n"
-    return str1.join(filter(lambda lstItem: lstItem!="CONNECT" and lstItem!="REGISTER",lst))
+    return str1.join(filter(lambda lstItem: lstItem != "CONNECT" and lstItem != "REGISTER", lst))
 
-serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time, 
-                 "NAME": name, "EXIT": exitFromServer, 
-                 "PRINT_SCREEN": printScreen,"ACTIVATE_PROGRAM": activateProgram, 
-                 "SHOW_FOLDER": showFolder, "SHOW_ACTIONS":showActions}
+
+serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time,
+                 "NAME": name, "EXIT": exitFromServer,
+                 "PRINT_SCREEN": printScreen, "ACTIVATE_PROGRAM": activateProgram,
+                 "SHOW_FOLDER": showFolder, "SHOW_ACTIONS": showActions}
 
 
 class ClientThread(threading.Thread):
@@ -155,13 +195,14 @@ class ClientThread(threading.Thread):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.clientAddress = clientAddress
-        self.name=""
+        self.name = ""
         print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
 
     def run(self):
         # try:
         while True:
+            activateProgram(self.csocket, "Postman.exe")
             data = self.csocket.recv(2048)
             dataArray = data.split(";")
             if len(dataArray) > 0:
@@ -171,7 +212,7 @@ class ClientThread(threading.Thread):
                     # might not need this check
                     if len(dataArray) > 1:
                         args = dataArray[1]
-                        result = serverActions[action](self,args)
+                        result = serverActions[action](self, args)
                     else:
                         result = serverActions[action](self)
                     if result.lower() != "bye bye":
