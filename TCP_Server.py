@@ -15,27 +15,6 @@ from PIL import ImageGrab
 mutex = threading.Lock()
 
 
-def getFullFilePath(directory, fileName):
-    files = os.listdir(directory)
-    print(files)
-    for f in files:
-        try:
-            filePath = os.path.join(directory, f)
-            print(filePath)
-            # if f is a dir
-            if os.path.isdir(filePath):
-                return getFullFilePath(filePath, fileName)
-            # if f is a file
-            elif os.path.isfile(filePath):
-                if f == fileName:
-                    return filePath
-            else:
-                continue
-        except WindowsError:
-            continue
-    return None
-
-
 def md5Encryption(string):
     m = hashlib.md5()
     m.update(string)
@@ -151,23 +130,11 @@ def printScreen(client, args=None):
 
 
 def activateProgram(client, args=None):
-    # try:
-    if(args != None):
-        if(os.path.isfile(args)):
-            subprocess.call([args])
-        else:
-            dl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            drives = ['%s:' % d for d in dl if os.path.exists('%s:' % d)]
-            for drive in drives:
-                f = getFullFilePath(drive+"/", args)
-                if(f != None):
-                    subprocess.call([f])
-                    break
+    try:
+        subprocess.call([args])
         return "program activated"
-        # except:
-        #     return "program failed to be activated"
-    else:
-        return "no args given"
+    except:
+        return "failed to activate program"
 
 
 def showFolder(client, args=None):
@@ -202,7 +169,6 @@ class ClientThread(threading.Thread):
     def run(self):
         # try:
         while True:
-            activateProgram(self.csocket, "Postman.exe")
             data = self.csocket.recv(2048)
             dataArray = data.split(";")
             if len(dataArray) > 0:
