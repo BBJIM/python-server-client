@@ -11,19 +11,32 @@ try:
     from PIL import ImageGrab
 except ImportError:
     sys.exit("""You need Pillow! install it by runnig pip install
-                Pillow in the directory where pip.exe is""")
+				Pillow in the directory where pip.exe is""")
 
-# TODO: add show all available actions+params
-# TODO: add try catch to all actions
-# TODO: add comments
-
+# creates a mutex for the server for the users file
 mutex = threading.Lock()
+
+"""
+Encrypts the string to a md5 format string
+
+args: string
+"""
 
 
 def md5Encryption(string):
-    m = hashlib.md5()
-    m.update(string)
-    return m.hexdigest()
+    try:
+        m = hashlib.md5()
+        m.update(string)
+        return m.hexdigest()
+    except:
+        print ("Error in 'md5Encryption'")
+
+
+"""
+Checks if a username is already in the file of users
+
+args: username
+"""
 
 
 def checkIfRegistered(username):
@@ -37,9 +50,17 @@ def checkIfRegistered(username):
                 return True
         return False
     except:
-        print ("Error")
+        print ("Error in 'checkIfRegistered'")
     finally:
         mutex.release()
+
+
+"""
+checks if the username and password given are mathcing
+a username and password in the file of users
+
+args: username and password
+"""
 
 
 def login(username, password):
@@ -54,21 +75,42 @@ def login(username, password):
                 return True
         return False
     except:
-        print("Error")
+        print("Error in 'login'")
         return False
     finally:
         mutex.release()
 
 
+"""
+the user action to connect, it gets the username and
+password from the client and calls the login method
+
+args: username and password
+"""
+
+
 def connect(client, args=None):
-    argsArray = args.split(",")
-    username = argsArray[0]
-    password = argsArray[1]
-    if login(username, password):
-        client.name = username
-        return pickle.dumps((True, "You are now logged in..."))
-    else:
-        return pickle.dumps((False, "username and/or password are incorrect"))
+    try:
+        argsArray = args.split(",")
+        username = argsArray[0]
+        password = argsArray[1]
+        if login(username, password):
+            client.name = username
+            return pickle.dumps((True, "You are now logged in..."))
+        else:
+            return pickle.dumps((False, "username and/or password are incorrect"))
+    except:
+        print("Error in 'connect'")
+
+
+"""
+the user action to register, it gets the username and
+password from the client, checks if there isnt a
+username already, writes the new user in the users
+file and calls the login method
+
+args: username and password
+"""
 
 
 def register(client, args=None):
@@ -89,7 +131,7 @@ def register(client, args=None):
             file.write("\n")
             file.close()
         except:
-            print("Error")
+            print("Error in 'register'")
             return pickle.dumps((False, "error creating user"))
         finally:
             mutex.release()
@@ -100,20 +142,59 @@ def register(client, args=None):
             return pickle.dumps((False, "error creating user"))
 
 
+"""
+the user action to get the current time
+
+args: None
+"""
+
+
 def time(client, args=None):
-    tm = datetime.datetime.now()
-    return "The current time is {}".format(tm)
+    try:
+        tm = datetime.datetime.now()
+        return "The current time is {}".format(tm)
+    except:
+        print("Error in 'time'")
+
+
+"""
+the user action to get the user name
+
+args: None
+"""
 
 
 def name(client, args=None):
-    return client.name
+    try:
+        return client.name
+    except:
+        print("Error in 'name'")
+
+
+"""
+the user action to exsit from the client and
+disconnect the connection
+
+args: None
+"""
 
 
 def exitFromServer(client, args=None):
-    client.csocket.send("Bye Bye")
-    client.csocket.shutdown(0)
-    client.csocket.close()
-    return "Bye Bye"
+    try:
+        client.csocket.send("Bye Bye")
+        client.csocket.shutdown(0)
+        client.csocket.close()
+        return "Bye Bye"
+    except:
+        print("Error in 'exitFromServer'")
+
+
+"""
+the user action to activate a print screen of
+the server and get the image that was saved
+
+args: None
+"""
 
 
 def printScreen(client, args=None):
@@ -134,6 +215,15 @@ def printScreen(client, args=None):
         return "Image not saved"
 
 
+"""
+the user action to activate a program at the server
+(postman,word,etc..) by receiving the full path 
+of the file to activate
+
+args: full path of a file
+"""
+
+
 def activateProgram(client, args=None):
     try:
         subprocess.call([args])
@@ -142,39 +232,90 @@ def activateProgram(client, args=None):
         return "failed to activate program"
 
 
+"""
+the user action to show the contents of a folder
+
+args: full path of a file
+"""
+
+
 def showFolder(client, args=None):
-    path = "."
-    if args != None:
-        path = args
-    for root, dirs, files in os.walk(path):
-        root
-        return root + " =>\n" + ", ".join(dirs+files)
+    try:
+        path = "."
+        if args != None:
+            path = args
+        for root, dirs, files in os.walk(path):
+            root
+            return root + " =>\n" + ", ".join(dirs+files)
+    except:
+        print("Error in 'showFolder'")
+
+
+"""
+the user action to get all the possible actions of the server
+
+args: None
+"""
 
 
 def showActions(client, args=None):
-    lst = list(serverActions.keys())
-    str1 = "\n"
-    return str1.join(filter(lambda lstItem: lstItem != "CONNECT" and lstItem != "REGISTER", lst))
+    try:
+        lst = list(serverActions.keys())
+        str1 = "\n"
+        return str1.join(filter(lambda lstItem: lstItem != "CONNECT" and lstItem != "REGISTER", lst))
+    except:
+        print("Error in 'showActions'")
 
 
+"""
+A dictonary with all the server ui actions-
+key:name of action, value: reference to the action method
+"""
 serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time,
                  "NAME": name, "EXIT": exitFromServer,
                  "PRINT_SCREEN": printScreen, "ACTIVATE_PROGRAM": activateProgram,
                  "SHOW_FOLDER": showFolder, "SHOW_ACTIONS": showActions}
 
 
-def ab((clientsock)):
-    threading.Timer(5, ab, (clientsock,)).start()
-    clientsock.send("Connection Is Alive")
+"""
+The keep alive method that sends on a different thread
+a message every 5 seconds that the server is still alive
+"""
+
+
+def keep_connection_alive((clientsock)):
+    try:
+        # the timer that calls itself at the .Timer() callback parameter
+        threading.Timer(5, keep_connection_alive, (clientsock,)).start()
+        # sends the message
+        clientsock.send("Connection Is Alive")
+    except:
+        print("Error in 'keep_connection_alive'")
+
+
+"""
+The keep_connection_alive thread method that connects to
+the client and calls the keep_connection_alive method
+"""
 
 
 def connectionThread():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("127.0.0.1", 8084))
-    server.listen(1)
-    clientsock, clientAddress = server.accept()
-    ab((clientsock))
+    try:
+        # connects to the client
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind(("127.0.0.1", 8084))
+        server.listen(1)
+        clientsock, clientAddress = server.accept()
+        # calls the keep_connection_alive method
+        keep_connection_alive((clientsock))
+    except:
+        print("Error in 'connectionThread'")
+
+
+"""
+The Client thread class that represnts a connection to a client
+"""
 
 
 class ClientThread(threading.Thread):
@@ -183,6 +324,7 @@ class ClientThread(threading.Thread):
         self.csocket = clientsocket
         self.clientAddress = clientAddress
         self.name = ""
+        # activates the keep_connection_alive thread
         threading._start_new_thread(connectionThread, ())
         print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
@@ -191,18 +333,30 @@ class ClientThread(threading.Thread):
         try:
             while True:
                 data = self.csocket.recv(2048)
+                # splits the received data by a ;
+                # the first part is the name of the action
+                # the second part is the args of the action
                 dataArray = data.split(";")
                 if len(dataArray) > 0:
                     action = dataArray[0].upper()
                     global serverActions
-
+                    # checks if the action string from the client exists
                     if action in serverActions:
-                        # might not need this check
+                        # if there are args, calls the action with the args
                         if len(dataArray) > 1:
                             args = dataArray[1]
+                            # calls the action by getting its mehod
+                            # reference from the dictonary
                             result = serverActions[action](self, args)
+                        # else, calls the action without args
                         else:
+                            # calls the action by getting its mehod
+                            # reference from the dictonary
                             result = serverActions[action](self)
+                        # if the result from the action is "bye bye", then
+                        # it means that the connection is closed so it
+                        # the instance of itself, otherwise, it send the
+                        # result to the client
                         if result.lower() != "bye bye":
                             self.csocket.send(result)
                         else:
@@ -217,19 +371,31 @@ class ClientThread(threading.Thread):
                 self.clientAddress))
 
 
+"""
+The main method of the program, when the server starts, 
+this method get called
+"""
+
+
 def main():
-    LOCALHOST = "127.0.0.1"
-    PORT = 8083
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((LOCALHOST, PORT))
-    print("\n\nServer started")
-    print("Waiting for client request..")
-    while True:
-        server.listen(1)
-        clientsock, clientAddress = server.accept()
-        newthread = ClientThread(clientAddress, clientsock)
-        newthread.start()
+    try:
+        # activates the server
+        LOCALHOST = "127.0.0.1"
+        PORT = 8083
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind((LOCALHOST, PORT))
+        print("\n\nServer started")
+        print("Waiting for client request..")
+        while True:
+            # getting client connection requests and start
+            # a new thread for each client
+            server.listen(1)
+            clientsock, clientAddress = server.accept()
+            newthread = ClientThread(clientAddress, clientsock)
+            newthread.start()
+    except:
+        print("Error in 'main'")
 
 
 if __name__ == "__main__":
