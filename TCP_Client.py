@@ -3,23 +3,55 @@ import pickle
 import socket
 import sys
 import threading
+import datetime
+
 
 # TODO: add try catch
 
+isConnected = False
+t = datetime.datetime.now()
+client = None
+
+
+def ab((connection_client)):
+    global isConnected
+    global t
+    global client
+    isConnected = False if (datetime.datetime.now() -
+                            t).total_seconds() > 10 else isConnected
+    if isConnected:
+        threading.Timer(10, ab, (connection_client,)).start()
+    else:
+        print("Connection is over")
+        connection_client.close()
+        client.close()
+        sys.exit()
+        return False
+
 
 def connectionThread(SERVER, PORT):
-    timer = threading.Timer(10)
-    timer.start()
+    global isConnected
+    global t
+
+    connection_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection_client.connect((SERVER, PORT))
+    ab((connection_client))
+    while True:
+        in_data = connection_client.recv(1024)
+        t = datetime.datetime.now()
 
 
 def main():
     SERVER = "127.0.0.1"
     PORT = 8083
+    global isConnected
+    global client
     isConnected = False
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER, PORT))
-        threading._start_new_thread(connectionThread)
+        threading._start_new_thread(
+            connectionThread, (SERVER, PORT+1))
         isConnected = True
     except:
         print("\nCould not connect the server\n")
@@ -39,10 +71,11 @@ def main():
                     isLoggedIn = True
                     break
             else:
-                print(
-                    "From Client: You can only enter the register or connect command at this time")
-
-        print("Enter the command you want to activate")
+                if isConnected:
+                    print(
+                        "From Client: You can only enter the register or connect command at this time")
+        if isConnected:
+            print("Enter the command you want to activate")
 
         while isLoggedIn and isConnected:
             out_data = raw_input(">>>")
@@ -55,6 +88,7 @@ def main():
                     in_data = client.recv(4096)
                     print("From Server: {}".format(in_data))
                     if in_data.lower() == "bye bye":
+                        client.close()
                         sys.exit()
                 else:
                     bytesArray = []
@@ -70,6 +104,9 @@ def main():
                     with open("{}/{}.png".format(dirname, name), 'ab') as img:
                         img.write(data)
                         img.close()
+        print("Connection is over")
+        client.close()
+        sys.exit()
 
 
 if __name__ == "__main__":

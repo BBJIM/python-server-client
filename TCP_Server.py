@@ -10,7 +10,7 @@ import threading
 try:
     from PIL import ImageGrab
 except ImportError:
-    sys.exit("""You need Pillow! install it by runnig pip install 
+    sys.exit("""You need Pillow! install it by runnig pip install
                 Pillow in the directory where pip.exe is""")
 
 # TODO: add show all available actions+params
@@ -162,7 +162,19 @@ serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time,
                  "PRINT_SCREEN": printScreen, "ACTIVATE_PROGRAM": activateProgram,
                  "SHOW_FOLDER": showFolder, "SHOW_ACTIONS": showActions}
 
-# def connectionThread():
+
+def ab((clientsock)):
+    threading.Timer(5, ab, (clientsock,)).start()
+    clientsock.send("Connection Is Alive")
+
+
+def connectionThread():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", 8084))
+    server.listen(1)
+    clientsock, clientAddress = server.accept()
+    ab((clientsock))
 
 
 class ClientThread(threading.Thread):
@@ -171,37 +183,38 @@ class ClientThread(threading.Thread):
         self.csocket = clientsocket
         self.clientAddress = clientAddress
         self.name = ""
-        threading._start_new_thread(connectionThread)
+        threading._start_new_thread(connectionThread, ())
         print("New connection added: ", clientAddress)
         self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
 
     def run(self):
-        # try:
-        while True:
-            data = self.csocket.recv(2048)
-            dataArray = data.split(";")
-            if len(dataArray) > 0:
-                action = dataArray[0].upper()
-                global serverActions
-                if action in serverActions:
-                    # might not need this check
-                    if len(dataArray) > 1:
-                        args = dataArray[1]
-                        result = serverActions[action](self, args)
+        try:
+            while True:
+                data = self.csocket.recv(2048)
+                dataArray = data.split(";")
+                if len(dataArray) > 0:
+                    action = dataArray[0].upper()
+                    global serverActions
+
+                    if action in serverActions:
+                        # might not need this check
+                        if len(dataArray) > 1:
+                            args = dataArray[1]
+                            result = serverActions[action](self, args)
+                        else:
+                            result = serverActions[action](self)
+                        if result.lower() != "bye bye":
+                            self.csocket.send(result)
+                        else:
+                            del self
+                            return
                     else:
-                        result = serverActions[action](self)
-                    if result.lower() != "bye bye":
-                        self.csocket.send(result)
-                    else:
-                        del self
-                        return
+                        self.csocket.send("no such action")
                 else:
-                    self.csocket.send("no such action")
-            else:
-                self.csocket.send("no action given")
-        # except:
-        #     print ("Client at {} disconnected due to an error...".format(
-        #         self.clientAddress))
+                    self.csocket.send("no action given")
+        except:
+            print ("Client at {} disconnected due to an error...".format(
+                self.clientAddress))
 
 
 def main():
