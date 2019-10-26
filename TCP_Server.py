@@ -86,6 +86,9 @@ the user action to connect, it gets the username and
 password from the client and calls the login method
 
 args: username and password
+
+returns a tuple with a boolean that repesents if the 
+	login worked and a message for the client to see
 """
 
 
@@ -110,6 +113,9 @@ username already, writes the new user in the users
 file and calls the login method
 
 args: username and password
+
+returns a tuple with a boolean that repesents if the 
+	login worked and a message for the client to see
 """
 
 
@@ -199,16 +205,23 @@ args: None
 
 def printScreen(client, args=None):
     try:
+                # prints the screen
         im = ImageGrab.grab()
+        # saves the image
         im.save("{}.png".format(client.name))
         with open("{}.png".format(client.name), "rb") as image:
+                        # saves the image by reading the bytes of it and
+                        # sending them to the client
             byte = image.read(16384)
             while len(byte) >= 16384:
                 client.csocket.send(byte)
                 byte = image.read(16384)
-            client.csocket.send(byte)
+            # sends the rest of the bytes left
+            if len(byte) > 0:
+                client.csocket.send(byte)
             im.close()
             image.close()
+			# removes the image saved at the server folder
             os.remove("{}.png".format(client.name))
             return "Image has be saved in the client dir"
     except:
@@ -226,6 +239,7 @@ args: full path of a file
 
 def activateProgram(client, args=None):
     try:
+		# activates a program
         subprocess.call([args])
         return "program activated"
     except:
@@ -246,6 +260,8 @@ def showFolder(client, args=None):
             path = args
         for root, dirs, files in os.walk(path):
             root
+			# shows the root that was given and then all 
+			# the files and dirs that it containes
             return root + " =>\n" + ", ".join(dirs+files)
     except:
         print("Error in 'showFolder'")
@@ -262,6 +278,7 @@ def showActions(client, args=None):
     try:
         lst = list(serverActions.keys())
         str1 = "\n"
+		# shows all the actions except "connect" and "register"
         return str1.join(filter(lambda lstItem: lstItem != "CONNECT" and lstItem != "REGISTER", lst))
     except:
         print("Error in 'showActions'")
