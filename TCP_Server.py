@@ -16,6 +16,10 @@ except ImportError:
 # creates a mutex for the server for the users file
 mutex = threading.Lock()
 
+# global vars
+HOSTIP = None
+PORT = 8083
+
 """
 Encrypts the string to a md5 format string
 
@@ -87,7 +91,7 @@ password from the client and calls the login method
 
 args: username and password
 
-returns a tuple with a boolean that repesents if the 
+returns a tuple with a boolean that repesents if the
 	login worked and a message for the client to see
 """
 
@@ -114,7 +118,7 @@ file and calls the login method
 
 args: username and password
 
-returns a tuple with a boolean that repesents if the 
+returns a tuple with a boolean that repesents if the
 	login worked and a message for the client to see
 """
 
@@ -230,7 +234,7 @@ def printScreen(client, args=None):
 
 """
 the user action to activate a program at the server
-(postman,word,etc..) by receiving the full path 
+(postman,word,etc..) by receiving the full path
 of the file to activate
 
 args: full path of a file
@@ -260,7 +264,7 @@ def showFolder(client, args=None):
             path = args
         for root, dirs, files in os.walk(path):
             root
-			# shows the root that was given and then all 
+			# shows the root that was given and then all
 			# the files and dirs that it containes
             return root + " =>\n" + ", ".join(dirs+files)
     except:
@@ -301,13 +305,19 @@ a message every 5 seconds that the server is still alive
 
 
 def keep_connection_alive((clientsock)):
+    isAlive = True
     try:
-        # the timer that calls itself at the .Timer() callback parameter
-        threading.Timer(5, keep_connection_alive, (clientsock,)).start()
         # sends the message
         clientsock.send("Connection Is Alive")
     except:
-        print("Error in 'keep_connection_alive'")
+		# clientsock.shutdown(0)
+		# clientsock.close()
+        print("disconnected, connection is not alive'")
+        isAlive = False
+    if isAlive:
+        # the timer that calls itself at the .Timer() callback parameter
+        threading.Timer(5, keep_connection_alive,
+                        (clientsock,)).start()
 
 
 """
@@ -319,9 +329,11 @@ the client and calls the keep_connection_alive method
 def connectionThread():
     try:
         # connects to the client
+        global HOSTIP
+        global PORT
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind(("127.0.0.1", 8084))
+        server.bind((HOSTIP, PORT+1))
         server.listen(1)
         clientsock, clientAddress = server.accept()
         # calls the keep_connection_alive method
@@ -333,8 +345,6 @@ def connectionThread():
 """
 The Client thread class that represnts a connection to a client
 """
-
-
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
@@ -344,7 +354,7 @@ class ClientThread(threading.Thread):
         # activates the keep_connection_alive thread
         threading._start_new_thread(connectionThread, ())
         print("New connection added: ", clientAddress)
-        self.csocket.send("\n\nEnter 'Connect/Register;UserName,Password'")
+        self.csocket.send("\nEnter 'Connect/Register;UserName,Password'")
 
     def run(self):
         try:
@@ -384,25 +394,26 @@ class ClientThread(threading.Thread):
                 else:
                     self.csocket.send("no action given")
         except:
+            self.csocket.shutdown(0)
+            self.csocket.close()
             print ("Client at {} disconnected due to an error...".format(
                 self.clientAddress))
 
 
 """
-The main method of the program, when the server starts, 
+The main method of the program, when the server starts,
 this method get called
 """
-
-
 def main():
     try:
+        global HOSTIP
+        global PORT
         # activates the server
-        LOCALHOST = "127.0.0.1"
-        PORT = 8083
+        HOSTIP = socket.gethostbyname(socket.gethostname())
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((LOCALHOST, PORT))
-        print("\n\nServer started")
+        server.bind((HOSTIP, PORT))
+        print("\n\nServer at {} started".format(HOSTIP))
         print("Waiting for client request..")
         while True:
             # getting client connection requests and start

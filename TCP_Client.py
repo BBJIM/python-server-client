@@ -7,7 +7,7 @@ import threading
 
 # global vars
 isConnected = False
-last_time_of_ka_msg = datetime.datetime.now()
+last_time_of_ka_msg = None
 client = None
 
 
@@ -55,7 +55,6 @@ def connectionThread(SERVER, PORT):
     try:
         global isConnected
         global last_time_of_ka_msg
-
         # connects to the server
         connection_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection_client.connect((SERVER, PORT))
@@ -77,22 +76,25 @@ this method get called
 
 
 def main():
-    SERVER = "127.0.0.1"
     PORT = 8083
     global isConnected
     global client
+    global last_time_of_ka_msg
     isConnected = False
 
     try:
         # connects to the server
+        print("\nEnter the server IP address\n")
+        SERVER = raw_input(">>>")
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER, PORT))
         # activates the keep_connection_alive thread
+        last_time_of_ka_msg = datetime.datetime.now()
         threading._start_new_thread(
             connectionThread, (SERVER, PORT+1))
         isConnected = True
     except:
-        print("\nCould not connect the server\n")
+        print("\nCould not connect the server, please restart the program to try again\n")
     if isConnected:
         isLoggedIn = False
         in_data = client.recv(1024)
@@ -117,11 +119,10 @@ def main():
                 if isConnected:
                     print(
                         "From Client: You can only enter the register or connect command at this time")
-        if isConnected:
-            print("Enter the command you want to activate")
 
         # the loop for send/recv while the client is logged in
         while isLoggedIn and isConnected:
+            print("Enter the command you want to activate")
             # gets input
             out_data = raw_input(">>>")
             check_command = out_data.split(";")[0].lower()
