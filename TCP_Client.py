@@ -42,7 +42,7 @@ def keep_connection_alive((connection_client)):
             sys.exit()
             return False
     except:
-        print("Error in 'keep_connection_alive'")
+        print("Disconnected")
 
 
 """
@@ -97,6 +97,7 @@ def main():
         print("\nCould not connect the server, please restart the program to try again\n")
     if isConnected:
         isLoggedIn = False
+        print("Connection Successful")
         in_data = client.recv(1024)
         print("From Server: {}".format(in_data))
         # the loop for send/recv while the client is not logged in
