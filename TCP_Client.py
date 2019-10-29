@@ -102,7 +102,7 @@ def main():
             isConnected = True
         except:
             print(
-                "\nCould not connect the server, please restart the program to try again\n")
+                "\nCould not connect the server, please try again\n")
     if isConnected:
         isLoggedIn = False
         print("Connection Successful")
