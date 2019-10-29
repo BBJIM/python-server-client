@@ -21,6 +21,8 @@ HOSTIP = None
 PORT = 8083
 
 """
+md5Encryption:
+
 Encrypts the string to a md5 format string
 
 args: string
@@ -37,6 +39,8 @@ def md5Encryption(string):
 
 
 """
+checkIfRegistered:
+
 Checks if a username is already in the file of users
 
 args: username
@@ -60,6 +64,8 @@ def checkIfRegistered(username):
 
 
 """
+login:
+
 checks if the username and password given are mathcing
 a username and password in the file of users
 
@@ -86,6 +92,8 @@ def login(username, password):
 
 
 """
+connect:
+
 the user action to connect, it gets the username and
 password from the client and calls the login method
 
@@ -111,6 +119,8 @@ def connect(client, args=None):
 
 
 """
+register:
+
 the user action to register, it gets the username and
 password from the client, checks if there isnt a
 username already, writes the new user in the users
@@ -153,6 +163,8 @@ def register(client, args=None):
 
 
 """
+time:
+
 the user action to get the current time
 
 args: None
@@ -168,6 +180,8 @@ def time(client, args=None):
 
 
 """
+name:
+
 the user action to get the user name
 
 args: None
@@ -182,6 +196,8 @@ def name(client, args=None):
 
 
 """
+exitFromServer:
+
 the user action to exsit from the client and
 disconnect the connection
 
@@ -200,6 +216,8 @@ def exitFromServer(client, args=None):
 
 
 """
+printScreen:
+
 the user action to activate a print screen of
 the server and get the image that was saved
 
@@ -209,7 +227,7 @@ args: None
 
 def printScreen(client, args=None):
     try:
-                # prints the screen
+        # prints the screen
         im = ImageGrab.grab()
         # saves the image
         im.save("{}.png".format(client.name))
@@ -233,6 +251,8 @@ def printScreen(client, args=None):
 
 
 """
+activateProgram:
+
 the user action to activate a program at the server
 (postman,word,etc..) by receiving the full path
 of the file to activate
@@ -251,6 +271,8 @@ def activateProgram(client, args=None):
 
 
 """
+showFolder:
+
 the user action to show the contents of a folder
 
 args: full path of a file
@@ -275,6 +297,8 @@ def showFolder(client, args=None):
 
 
 """
+showActions:
+
 the user action to get all the possible actions of the server
 
 args: None
@@ -302,6 +326,8 @@ serverActions = {"CONNECT": connect, "REGISTER": register, "TIME": time,
 
 
 """
+keep_connection_alive:
+
 The keep alive method that sends on a different thread
 a message every 5 seconds that the server is still alive
 """
@@ -311,11 +337,11 @@ def keep_connection_alive((clientsock)):
     isAlive = True
     try:
         # sends the message
-        clientsock.send("Connection Is Alive")
+        clientsock.send("Connection with client is alive")
     except:
 		# clientsock.shutdown(0)
 		# clientsock.close()
-        print("disconnected, connection is not alive'")
+        print("Disconnected, connection with client is not alive'")
         isAlive = False
     if isAlive:
         # the timer that calls itself at the .Timer() callback parameter
@@ -324,6 +350,8 @@ def keep_connection_alive((clientsock)):
 
 
 """
+connectionThread:
+
 The keep_connection_alive thread method that connects to
 the client and calls the keep_connection_alive method
 """
@@ -339,6 +367,7 @@ def connectionThread():
         server.bind((HOSTIP, PORT+1))
         server.listen(1)
         clientsock, clientAddress = server.accept()
+        print("New keep_alive_trhead started: {}".format(clientAddress))
         # calls the keep_connection_alive method
         keep_connection_alive((clientsock))
     except:
@@ -356,7 +385,7 @@ class ClientThread(threading.Thread):
         self.name = ""
         # activates the keep_connection_alive thread
         threading._start_new_thread(connectionThread, ())
-        print("New connection added: ", clientAddress)
+        print("New connection added: {}".format(clientAddress))
         self.csocket.send("\nEnter 'Connect/Register;UserName,Password'")
 
     def run(self):
@@ -404,6 +433,8 @@ class ClientThread(threading.Thread):
 
 
 """
+main:
+
 The main method of the program, when the server starts,
 this method get called
 """

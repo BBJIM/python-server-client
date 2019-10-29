@@ -12,6 +12,8 @@ client = None
 
 
 """
+keep_connection_alive:
+
 The keep alive method that checks every 10 seconds if 
 there is still a connection message from the server
 """
@@ -46,6 +48,8 @@ def keep_connection_alive((connection_client)):
 
 
 """
+connectionThread:
+
 The keep_connection_alive thread method that connects to
 the server and calls the keep_connection_alive method
 """
@@ -70,6 +74,8 @@ def connectionThread(SERVER, PORT):
 
 
 """
+main:
+
 The main method of the program, when the server starts, 
 this method get called
 """
