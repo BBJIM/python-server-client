@@ -103,7 +103,7 @@ def connect(client, args=None):
         password = argsArray[1]
         if login(username, password):
             client.name = username
-            return pickle.dumps((True, "You are now logged in...\nto see all the avilable action enter 'SHOW_ACTIONS'"))
+            return pickle.dumps((True, "You are now logged in...\nto see all the avilable action enter 'SHOW_ACTIONS'\nTo activate an action, wirte ACTION_ACTION;arg,arg"))
         else:
             return pickle.dumps((False, "username and/or password are incorrect"))
     except:
@@ -147,7 +147,7 @@ def register(client, args=None):
             mutex.release()
         if login(username, password):
             client.name = username
-            return pickle.dumps((True, "You are now logged in...\nto see all the avilable action enter 'SHOW_ACTIONS'"))
+            return pickle.dumps((True, "You are now logged in...\nto see all the avilable action enter 'SHOW_ACTIONS'\nTo activate an action, wirte ACTION_ACTION;arg,arg"))
         else:
             return pickle.dumps((False, "error creating user"))
 
