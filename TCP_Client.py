@@ -66,7 +66,7 @@ def connectionThread(SERVER, PORT):
             # last_time_of_ka_msg global var to the current time
             last_time_of_ka_msg = datetime.datetime.now()
     except:
-        print("Error in 'connectionThread'")
+        print("Disconnected")
 
 
 """
@@ -147,7 +147,7 @@ def main():
                 # if the actions is print_screen
                 else:
                     # the print_screen action sends alot of data in a
-                    # loop ubtil the message "PRINT_IMAGE" is received
+                    # loop until the message "PRINT_IMAGE" is received
                     bytesArray = []
                     in_data = client.recv(16384)
                     while in_data != "PRINT_IMAGE":
@@ -156,7 +156,6 @@ def main():
                     # saves the bytes data
                     data = b"{}".format("".join(bytesArray))
                     dirname = os.path.dirname(__file__)
-                    print("From Server: {}".format(in_data))
                     # gets the name of the client
                     client.sendall("NAME")
                     name = client.recv(1024)
@@ -164,6 +163,7 @@ def main():
                     with open("{}/{}.png".format(dirname, name), 'ab') as img:
                         img.write(data)
                         img.close()
+                    print("Image has be saved in the client dir")
         print("Connection is over")
         client.close()
         sys.exit()

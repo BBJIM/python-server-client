@@ -227,7 +227,7 @@ def printScreen(client, args=None):
             image.close()
 			# removes the image saved at the server folder
             os.remove("{}.png".format(client.name))
-            return "Image has be saved in the client dir"
+            return "PRINT_IMAGE"
     except:
         return "Image not saved"
 
@@ -262,11 +262,14 @@ def showFolder(client, args=None):
         path = "."
         if args != None:
             path = args
-        for root, dirs, files in os.walk(path):
-            root
-			# shows the root that was given and then all
-			# the files and dirs that it containes
-            return root + " =>\n" + ", ".join(dirs+files)
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path):
+                root
+                # shows the root that was given and then all
+                # the files and dirs that it containes
+                return root + " =>\n" + ", ".join(dirs+files)
+        else:
+            return "the given path is not directory"
     except:
         print("Error in 'showFolder'")
 
