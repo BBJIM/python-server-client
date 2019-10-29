@@ -88,19 +88,21 @@ def main():
     global last_time_of_ka_msg
     isConnected = False
 
-    try:
-        # connects to the server
-        print("\nEnter the server IP address\n")
-        SERVER = raw_input(">>>")
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((SERVER, PORT))
-        # activates the keep_connection_alive thread
-        last_time_of_ka_msg = datetime.datetime.now()
-        threading._start_new_thread(
-            connectionThread, (SERVER, PORT+1))
-        isConnected = True
-    except:
-        print("\nCould not connect the server, please restart the program to try again\n")
+    while not isConnected:
+        try:
+            # connects to the server
+            print("\nEnter the server IP address\n")
+            SERVER = raw_input(">>>")
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect((SERVER, PORT))
+            # activates the keep_connection_alive thread
+            last_time_of_ka_msg = datetime.datetime.now()
+            threading._start_new_thread(
+                connectionThread, (SERVER, PORT+1))
+            isConnected = True
+        except:
+            print(
+                "\nCould not connect the server, please restart the program to try again\n")
     if isConnected:
         isLoggedIn = False
         print("Connection Successful")
