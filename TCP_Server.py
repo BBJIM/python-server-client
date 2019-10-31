@@ -367,7 +367,7 @@ def connectionThread():
         server.bind((HOSTIP, PORT+1))
         server.listen(1)
         clientsock, clientAddress = server.accept()
-        print("\nNew keep_alive_trhead started: {}".format(clientAddress))
+        print("\nNew keep_alive_thread started: {}".format(clientAddress))
         # calls the keep_connection_alive method
         keep_connection_alive((clientsock))
     except:
