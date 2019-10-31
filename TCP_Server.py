@@ -367,7 +367,7 @@ def connectionThread():
         server.bind((HOSTIP, PORT+1))
         server.listen(1)
         clientsock, clientAddress = server.accept()
-        print("New keep_alive_trhead started: {}".format(clientAddress))
+        print("\nNew keep_alive_trhead started: {}".format(clientAddress))
         # calls the keep_connection_alive method
         keep_connection_alive((clientsock))
     except:
@@ -446,7 +446,7 @@ def main():
         HOSTIP = socket.gethostbyname(socket.gethostname())
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((HOSTIP, PORT))
+        server.bind(("0.0.0.0", PORT))
         print("\n\nServer at {} started".format(HOSTIP))
         print("Waiting for client request..")
         while True:
