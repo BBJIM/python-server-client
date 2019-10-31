@@ -446,7 +446,7 @@ def main():
         HOSTIP = socket.gethostbyname(socket.gethostname())
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind(("0.0.0.0", PORT))
+        server.bind((HOSTIP, PORT))
         print("\n\nServer at {} started".format(HOSTIP))
         print("Waiting for client request..")
         while True:
